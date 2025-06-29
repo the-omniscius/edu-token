@@ -54,58 +54,40 @@ export default function TeacherDashboard() {
   });
   const router = useRouter();
 
-  // Demo statistics
-  const [totalStudents, setTotalStudents] = useState(24);
-  const [activeTasks, setActiveTasks] = useState(8);
-  const [completedTasks, setCompletedTasks] = useState(156);
+  // Statistics
+  const [totalStudents, setTotalStudents] = useState(0);
+  const [activeTasks, setActiveTasks] = useState(0);
+  const [completedTasks, setCompletedTasks] = useState(0);
 
   useEffect(() => {
-    if (user) {
-      fetchTasks();
-      fetchEvents();
-    } else {
-      setLoading(false);
+    if (!user) {
+      router.push('/auth/sign-in');
+      return;
     }
-  }, [user]);
+
+    if (user.user_metadata?.role !== 'teacher') {
+      router.push('/dashboard/student');
+      return;
+    }
+
+    fetchTasks();
+    fetchEvents();
+    fetchStatistics();
+  }, [user, router]);
 
   const fetchTasks = async () => {
     try {
-      // Demo tasks for hackathon
-      const demoTasks: Task[] = [
-        {
-          id: '1',
-          title: 'Complete Math Assignment',
-          description: 'Solve 20 algebra problems from Chapter 5',
-          tokens: 50,
-          tokenType: 'academic',
-          assigned_to: 'student@example.com',
-          completed: false,
-          created_at: '2024-01-10'
-        },
-        {
-          id: '2',
-          title: 'Participate in Science Fair',
-          description: 'Present your science project to the class',
-          tokens: 75,
-          tokenType: 'academic',
-          assigned_to: '',
-          completed: false,
-          created_at: '2024-01-11'
-        },
-        {
-          id: '3',
-          title: 'Help Classmate with Homework',
-          description: 'Assist a peer with their studies',
-          tokens: 25,
-          tokenType: 'social',
-          assigned_to: 'student@example.com',
-          completed: true,
-          created_at: '2024-01-09'
-        }
-      ];
-      setTasks(demoTasks);
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('created_by', user?.email)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTasks(data || []);
     } catch (err) {
       setError('Failed to fetch tasks');
+      console.error('Error fetching tasks:', err);
     } finally {
       setLoading(false);
     }
@@ -113,34 +95,42 @@ export default function TeacherDashboard() {
 
   const fetchEvents = async () => {
     try {
-      // Demo events for hackathon
-      const demoEvents: Event[] = [
-        {
-          id: '1',
-          title: 'Coding Workshop',
-          description: 'Learn Python programming basics',
-          date: '2024-01-15',
-          time: '2:00 PM',
-          location: 'Computer Lab',
-          tokenReward: 100,
-          tokenType: 'academic',
-          created_by: 'teacher@example.com'
-        },
-        {
-          id: '2',
-          title: 'Community Service Day',
-          description: 'Help clean up the school garden',
-          date: '2024-01-20',
-          time: '10:00 AM',
-          location: 'School Garden',
-          tokenReward: 60,
-          tokenType: 'social',
-          created_by: 'teacher@example.com'
-        }
-      ];
-      setEvents(demoEvents);
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('created_by', user?.email)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setEvents(data || []);
     } catch (err) {
       setError('Failed to fetch events');
+      console.error('Error fetching events:', err);
+    }
+  };
+
+  const fetchStatistics = async () => {
+    try {
+      // Fetch total students
+      const { count: studentCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'student');
+
+      // Fetch active and completed tasks
+      const { data: taskStats } = await supabase
+        .from('tasks')
+        .select('completed')
+        .eq('created_by', user?.email);
+
+      const active = taskStats?.filter(task => !task.completed).length || 0;
+      const completed = taskStats?.filter(task => task.completed).length || 0;
+
+      setTotalStudents(studentCount || 0);
+      setActiveTasks(active);
+      setCompletedTasks(completed);
+    } catch (err) {
+      console.error('Error fetching statistics:', err);
     }
   };
 
@@ -153,23 +143,29 @@ export default function TeacherDashboard() {
     }
 
     try {
-      const task: Task = {
-        id: Date.now().toString(),
-        title: newTask.title,
-        description: newTask.description,
-        tokens: newTask.tokens,
-        tokenType: newTask.tokenType,
-        assigned_to: newTask.assigned_to || '',
-        completed: false,
-        created_at: new Date().toISOString()
-      };
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert([{
+          title: newTask.title,
+          description: newTask.description,
+          tokens: newTask.tokens,
+          tokenType: newTask.tokenType,
+          assigned_to: newTask.assigned_to || null,
+          completed: false,
+          created_by: user?.email
+        }])
+        .select();
 
-      setTasks([task, ...tasks]);
+      if (error) throw error;
+
+      setTasks([data[0], ...tasks]);
       setNewTask({ title: '', description: '', tokens: 0, tokenType: 'academic', assigned_to: '' });
       setShowCreateForm(false);
       setActiveTasks(prev => prev + 1);
+      setError('');
     } catch (err) {
       setError('Failed to create task');
+      console.error('Error creating task:', err);
     }
   };
 
@@ -182,40 +178,62 @@ export default function TeacherDashboard() {
     }
 
     try {
-      const event: Event = {
-        id: Date.now().toString(),
-        title: newEvent.title,
-        description: newEvent.description,
-        date: newEvent.date,
-        time: newEvent.time,
-        location: newEvent.location,
-        tokenReward: newEvent.tokenReward,
-        tokenType: newEvent.tokenType,
-        created_by: user?.email || 'teacher@example.com'
-      };
+      const { data, error } = await supabase
+        .from('events')
+        .insert([{
+          title: newEvent.title,
+          description: newEvent.description,
+          date: newEvent.date,
+          time: newEvent.time,
+          location: newEvent.location,
+          tokenReward: newEvent.tokenReward,
+          tokenType: newEvent.tokenType,
+          created_by: user?.email
+        }])
+        .select();
 
-      setEvents([event, ...events]);
+      if (error) throw error;
+
+      setEvents([data[0], ...events]);
       setNewEvent({ title: '', description: '', date: '', time: '', location: '', tokenReward: 0, tokenType: 'academic' });
       setShowEventForm(false);
+      setError('');
     } catch (err) {
       setError('Failed to create event');
+      console.error('Error creating event:', err);
     }
   };
 
   const deleteTask = async (taskId: string) => {
     try {
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', taskId);
+
+      if (error) throw error;
+
       setTasks(tasks.filter(task => task.id !== taskId));
       setActiveTasks(prev => prev - 1);
     } catch (err) {
       setError('Failed to delete task');
+      console.error('Error deleting task:', err);
     }
   };
 
   const deleteEvent = async (eventId: string) => {
     try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) throw error;
+
       setEvents(events.filter(event => event.id !== eventId));
     } catch (err) {
       setError('Failed to delete event');
+      console.error('Error deleting event:', err);
     }
   };
 
@@ -230,6 +248,10 @@ export default function TeacherDashboard() {
         <div className="text-xl">Loading...</div>
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return (
