@@ -1,7 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
-import { useRouter } from 'next/navigation';
 import { useUser } from '../../../context/UserContext';
 import QRScanner from '../../../components/QRScanner';
 import MobileQRScanner from '../../../components/MobileQRScanner';
@@ -44,7 +43,6 @@ interface TokenBalance {
 
 export default function StudentDashboard() {
   const { user } = useUser();
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
