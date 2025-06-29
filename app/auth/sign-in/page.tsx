@@ -17,7 +17,7 @@ export default function SignIn() {
     setError('');
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -32,7 +32,7 @@ export default function SignIn() {
           router.push('/dashboard/teacher');
         }
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -115,7 +115,7 @@ export default function SignIn() {
 
           <div className="text-center">
             <a href="/auth/sign-up" className="text-indigo-600 hover:text-indigo-500">
-              Don't have an account? Sign up
+              Don&apos;t have an account? Sign up
             </a>
           </div>
         </form>

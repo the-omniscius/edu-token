@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import { useRouter } from 'next/navigation';
 import { useUser } from '../../../context/UserContext';
@@ -57,6 +57,22 @@ export default function StudentDashboard() {
   // Remove demo events data
   // const demoEvents: Event[] = [...];
 
+  const loadDashboardData = useCallback(async () => {
+    try {
+      setLoading(true);
+      await Promise.all([
+        loadTokenBalance(),
+        fetchTasks(),
+        fetchEvents(),
+        fetchNotifications()
+      ]);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     // Check if user is on mobile
     const checkMobile = () => {
@@ -73,23 +89,7 @@ export default function StudentDashboard() {
     }
 
     return () => window.removeEventListener('resize', checkMobile);
-  }, [user]);
-
-  const loadDashboardData = async () => {
-    try {
-      setLoading(true);
-      await Promise.all([
-        loadTokenBalance(),
-        fetchTasks(),
-        fetchEvents(),
-        fetchNotifications()
-      ]);
-    } catch (error) {
-      console.error('Error loading dashboard data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [user, loadDashboardData]);
 
   const loadTokenBalance = async () => {
     try {
@@ -311,7 +311,7 @@ export default function StudentDashboard() {
 
   const saveTokenBalance = async () => {
     try {
-      const { data: existingData, error: selectError } = await supabase
+      const { error: selectError } = await supabase
         .from('user_tokens')
         .select('*')
         .eq('user_id', user?.id)

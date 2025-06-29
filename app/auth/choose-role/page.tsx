@@ -38,7 +38,7 @@ export default function ChooseRole() {
           }
         }
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -53,7 +53,7 @@ export default function ChooseRole() {
             Choose your role
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Select whether you're a student or teacher
+            Select whether you&apos;re a student or teacher
           </p>
         </div>
         
