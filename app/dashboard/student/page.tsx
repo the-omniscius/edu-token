@@ -546,7 +546,6 @@ export default function StudentDashboard() {
               />
             ) : (
               <QRScanner 
-                onScan={handleQRScan}
                 isScanning={scanning}
                 onClose={() => {
                   setScanning(false);

@@ -1,9 +1,10 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 
-export default function SignUp() {
+function SignUpInner() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -124,12 +125,23 @@ export default function SignUp() {
           </div>
 
           <div className="text-center">
-            <a href="/auth/sign-in" className="text-indigo-600 hover:text-indigo-500">
-              Already have an account? Sign in
-            </a>
+            <p className="mt-2 text-center text-sm text-gray-600">
+              Already have an account?{' '}
+              <Link href="/auth/sign-in" className="text-indigo-600 hover:text-indigo-500">
+                Sign in here
+              </Link>
+            </p>
           </div>
         </form>
       </div>
     </div>
+  );
+}
+
+export default function SignUp() {
+  return (
+    <Suspense>
+      <SignUpInner />
+    </Suspense>
   );
 }

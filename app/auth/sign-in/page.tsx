@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { supabase } from '../../../lib/supabaseClient';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function SignIn() {
   const [email, setEmail] = useState('');
@@ -113,11 +114,12 @@ export default function SignIn() {
             </button>
           </div>
 
-          <div className="text-center">
-            <a href="/auth/sign-up" className="text-indigo-600 hover:text-indigo-500">
-              Don&apos;t have an account? Sign up
-            </a>
-          </div>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            Don&apos;t have an account?{' '}
+            <Link href="/auth/sign-up" className="text-indigo-600 hover:text-indigo-500">
+              Sign up here
+            </Link>
+          </p>
         </form>
       </div>
     </div>

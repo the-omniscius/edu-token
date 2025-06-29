@@ -8,7 +8,7 @@ interface QRScannerProps {
   onClose: () => void;
 }
 
-export default function QRScanner({ onScan, isScanning, onClose }: QRScannerProps) {
+export default function QRScanner({ isScanning, onClose }: Omit<QRScannerProps, 'onScan'>) {
   const [scanProgress, setScanProgress] = useState(0);
 
   useEffect(() => {

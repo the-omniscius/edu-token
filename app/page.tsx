@@ -1,11 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useUser } from '@/context/UserContext';
 
 export default function HomePage() {
-  const { user } = useUser();
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Navigation */}
@@ -17,29 +14,18 @@ export default function HomePage() {
               <h1 className="text-xl font-bold text-gray-800">EduToken</h1>
             </div>
             <div className="flex items-center space-x-4">
-              {user ? (
-                <Link 
-                  href={user.user_metadata?.role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student'}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                <>
-                  <Link 
-                    href="/auth/sign-in"
-                    className="text-gray-600 hover:text-gray-800 transition-colors"
-                  >
-                    Sign In
-                  </Link>
-                  <Link 
-                    href="/auth/sign-up"
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
-                  >
-                    Get Started
-                  </Link>
-                </>
-              )}
+              <Link 
+                href="/auth/sign-in"
+                className="text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link 
+                href="/auth/sign-up"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                Get Started
+              </Link>
             </div>
           </div>
         </div>
@@ -57,14 +43,12 @@ export default function HomePage() {
             Earn Academic and Social tokens for your achievements and contributions to the community.
           </p>
           <div className="flex justify-center space-x-4">
-            {!user && (
-              <Link 
-                href="/auth/sign-up"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors"
-              >
-                Start Earning Tokens
-              </Link>
-            )}
+            <Link 
+              href="/auth/sign-up"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors"
+            >
+              Start Earning Tokens
+            </Link>
           </div>
         </div>
 
@@ -104,29 +88,20 @@ export default function HomePage() {
           <p className="text-gray-600 mb-8">
             Join us in creating a more engaging and rewarding educational experience
           </p>
-          {!user ? (
-            <div className="flex justify-center space-x-4">
-              <Link 
-                href="/auth/sign-up?role=student"
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-              >
-                Join as Student
-              </Link>
-              <Link 
-                href="/auth/sign-up?role=teacher"
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
-              >
-                Join as Teacher
-              </Link>
-            </div>
-          ) : (
+          <div className="flex justify-center space-x-4">
             <Link 
-              href={user.user_metadata?.role === 'teacher' ? '/dashboard/teacher' : '/dashboard/student'}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors"
+              href="/auth/sign-up?role=student"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
             >
-              Go to Dashboard
+              Join as Student
             </Link>
-          )}
+            <Link 
+              href="/auth/sign-up?role=teacher"
+              className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors"
+            >
+              Join as Teacher
+            </Link>
+          </div>
         </div>
       </div>
 

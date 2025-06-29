@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { supabase } from '../../lib/supabaseClient';
 
 export default function TestDB() {
@@ -13,7 +14,7 @@ export default function TestDB() {
   const testConnection = async () => {
     try {
       // Test basic connection
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .select('count')
         .limit(1);
@@ -32,7 +33,7 @@ export default function TestDB() {
 
   const createTestTask = async () => {
     try {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('tasks')
         .insert({
           title: 'Test Task',
@@ -90,12 +91,12 @@ export default function TestDB() {
               Create Test Task
             </button>
 
-            <a
+            <Link
               href="/"
               className="block w-full text-center px-4 py-2 bg-gray-300 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
             >
               Go Home
-            </a>
+            </Link>
           </div>
         </div>
       </div>
