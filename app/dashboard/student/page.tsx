@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '../../../context/UserContext';
 import QRScanner from '../../../components/QRScanner';
 import MobileQRScanner from '../../../components/MobileQRScanner';
+import Link from 'next/link';
 
 interface Task {
   id: string;
@@ -359,7 +360,7 @@ export default function StudentDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-800 mb-4">Please sign in to access your dashboard</h1>
-          <a href="/auth/sign-in" className="text-blue-600 hover:text-blue-800">Sign In</a>
+          <Link href="/auth/sign-in" className="text-blue-600 hover:text-blue-800">Sign In</Link>
         </div>
       </div>
     );

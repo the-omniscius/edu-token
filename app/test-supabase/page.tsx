@@ -1,12 +1,24 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { User } from '@supabase/supabase-js';
+
+interface TestDetails {
+  url?: string;
+  keyLength?: number;
+  hasUrl?: boolean;
+  hasKey?: boolean;
+  tableExists?: boolean;
+  authWorking?: boolean;
+  signUpSuccess?: boolean;
+  tableAccess?: boolean;
+}
 
 export default function TestSupabase() {
   const [status, setStatus] = useState('Testing...');
   const [error, setError] = useState('');
-  const [user, setUser] = useState<any>(null);
-  const [details, setDetails] = useState<any>({});
+  const [user, setUser] = useState<User | null>(null);
+  const [details, setDetails] = useState<TestDetails>({});
 
   useEffect(() => {
     testConnection();
@@ -39,7 +51,7 @@ export default function TestSupabase() {
       // Test 2: Try to access a simple endpoint first
       try {
         console.log('Testing basic Supabase connection...');
-        const { data, error } = await supabase.from('tokens').select('count').limit(1);
+        const { error } = await supabase.from('tokens').select('count').limit(1);
         
         if (error) {
           console.error('Database error:', error);
@@ -59,9 +71,10 @@ export default function TestSupabase() {
         setDetails(prev => ({ ...prev, tableExists: true }));
         setStatus('Database connection successful!');
         
-      } catch (tableError: any) {
+      } catch (tableError: unknown) {
+        const errorMessage = tableError instanceof Error ? tableError.message : 'Unknown error';
         console.error('Table access error:', tableError);
-        setError(`Table Error: ${tableError.message}`);
+        setError(`Table Error: ${errorMessage}`);
         setStatus('Table Error');
         return;
       }
@@ -81,15 +94,17 @@ export default function TestSupabase() {
         setUser(user);
         setDetails(prev => ({ ...prev, authWorking: true }));
         
-      } catch (authErr: any) {
+      } catch (authErr: unknown) {
+        const errorMessage = authErr instanceof Error ? authErr.message : 'Unknown error';
         console.error('Auth error:', authErr);
-        setError(`Auth Error: ${authErr.message}`);
+        setError(`Auth Error: ${errorMessage}`);
         setStatus('Auth Failed');
       }
       
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
       console.error('Connection error:', err);
-      setError(`Connection Error: ${err.message}`);
+      setError(`Connection Error: ${errorMessage}`);
       setStatus('Failed');
     }
   };
@@ -99,7 +114,7 @@ export default function TestSupabase() {
       setStatus('Testing sign up...');
       setError('');
       
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: 'test@example.com',
         password: 'testpassword123'
       });
@@ -113,8 +128,9 @@ export default function TestSupabase() {
       setStatus('Sign up successful! Check your email.');
       setDetails(prev => ({ ...prev, signUpSuccess: true }));
       
-    } catch (err: any) {
-      setError(`Sign Up Error: ${err.message}`);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Sign Up Error: ${errorMessage}`);
       setStatus('Failed');
       console.error('Sign up error:', err);
     }
@@ -129,7 +145,7 @@ export default function TestSupabase() {
       console.log('Testing table access with different methods...');
       
       // Method 1: Simple select
-      const { data: data1, error: error1 } = await supabase
+      const { error: error1 } = await supabase
         .from('tokens')
         .select('*')
         .limit(1);
@@ -144,8 +160,9 @@ export default function TestSupabase() {
       setStatus('Table access successful!');
       setDetails(prev => ({ ...prev, tableAccess: true }));
       
-    } catch (err: any) {
-      setError(`Table Access Error: ${err.message}`);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      setError(`Table Access Error: ${errorMessage}`);
       setStatus('Table Access Failed');
       console.error('Table access error:', err);
     }
