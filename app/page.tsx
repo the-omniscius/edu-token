@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useUser } from '../context/UserContext';
+import { useUser } from '@/context/UserContext';
 
 export default function HomePage() {
   const { user } = useUser();
@@ -65,12 +65,6 @@ export default function HomePage() {
                 Start Earning Tokens
               </Link>
             )}
-            <Link 
-              href="/test-supabase"
-              className="bg-gray-600 hover:bg-gray-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors"
-            >
-              Test Connection
-            </Link>
           </div>
         </div>
 
@@ -101,62 +95,6 @@ export default function HomePage() {
               Instantly earn tokens by scanning QR codes at events and activities. 
               Real-time rewards for real engagement.
             </p>
-          </div>
-        </div>
-
-        {/* Demo Section */}
-        <div className="bg-white rounded-lg shadow-lg p-8 mb-16">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">🎯 Hackathon Demo Features</h2>
-            <p className="text-gray-600">
-              Experience the future of educational incentives with our interactive demo
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-gray-800">For Students:</h3>
-              <ul className="space-y-2 text-gray-600">
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Real-time token balance tracking
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  QR code scanning simulation
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Event participation tracking
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Achievement notifications
-                </li>
-              </ul>
-            </div>
-            
-            <div className="space-y-4">
-              <h3 className="text-xl font-semibold text-gray-800">For Teachers:</h3>
-              <ul className="space-y-2 text-gray-600">
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Student progress monitoring
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Token distribution management
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Event creation and management
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-500 mr-2">✓</span>
-                  Analytics and insights
-                </li>
-              </ul>
-            </div>
           </div>
         </div>
 

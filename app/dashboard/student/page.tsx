@@ -11,7 +11,7 @@ interface Task {
   title: string;
   description: string;
   dueDate: string;
-  tokenReward: number;
+  tokens: number;
   tokenType: 'academic' | 'social';
   completed: boolean;
 }
@@ -25,7 +25,7 @@ interface Event {
   location: string;
   tokenReward: number;
   tokenType: 'academic' | 'social';
-  qrCode: string;
+  created_by: string;
 }
 
 interface Notification {
@@ -54,42 +54,8 @@ export default function StudentDashboard() {
   const [showQRScanner, setShowQRScanner] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
-  // Demo events data
-  const demoEvents: Event[] = [
-    {
-      id: '1',
-      title: 'Campus Cleanup Day',
-      description: 'Help keep our campus beautiful and earn social tokens!',
-      date: '2024-01-15',
-      time: '2:00 PM',
-      location: 'Main Campus',
-      tokenReward: 50,
-      tokenType: 'social',
-      qrCode: 'event-cleanup-2024'
-    },
-    {
-      id: '2',
-      title: 'Math Competition',
-      description: 'Test your mathematical skills and win academic tokens',
-      date: '2024-01-20',
-      time: '10:00 AM',
-      location: 'Science Building',
-      tokenReward: 100,
-      tokenType: 'academic',
-      qrCode: 'math-comp-2024'
-    },
-    {
-      id: '3',
-      title: 'Peer Tutoring Session',
-      description: 'Help fellow students and earn both token types',
-      date: '2024-01-25',
-      time: '3:30 PM',
-      location: 'Library',
-      tokenReward: 75,
-      tokenType: 'academic',
-      qrCode: 'tutoring-2024'
-    }
-  ];
+  // Remove demo events data
+  // const demoEvents: Event[] = [...];
 
   useEffect(() => {
     // Check if user is on mobile
@@ -150,52 +116,50 @@ export default function StudentDashboard() {
   };
 
   const fetchTasks = async () => {
-    // Demo tasks data
-    const demoTasks: Task[] = [
-      {
-        id: '1',
-        title: 'Complete Math Assignment',
-        description: 'Finish the calculus problem set',
-        dueDate: '2024-01-18',
-        tokenReward: 25,
-        tokenType: 'academic',
-        completed: false
-      },
-      {
-        id: '2',
-        title: 'Attend Study Group',
-        description: 'Join the physics study session',
-        dueDate: '2024-01-20',
-        tokenReward: 30,
-        tokenType: 'social',
-        completed: false
-      }
-    ];
-    setTasks(demoTasks);
+    try {
+      const { data, error } = await supabase
+        .from('tasks')
+        .select('*')
+        .or(`assigned_to.eq.${user?.email},assigned_to.is.null`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTasks(data || []);
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
+    }
   };
 
   const fetchEvents = async () => {
-    setEvents(demoEvents);
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setEvents(data || []);
+    } catch (err) {
+      console.error('Error fetching events:', err);
+    }
   };
 
   const fetchNotifications = async () => {
-    const demoNotifications: Notification[] = [
-      {
-        id: '1',
-        message: 'You earned 25 academic tokens for completing your assignment!',
-        type: 'success',
-        read: false,
-        timestamp: new Date().toISOString()
-      },
-      {
-        id: '2',
-        message: 'New event: Campus Cleanup Day - earn social tokens!',
-        type: 'info',
-        read: false,
-        timestamp: new Date().toISOString()
-      }
-    ];
-    setNotifications(demoNotifications);
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      // Fallback to empty array if notifications table doesn't exist
+      setNotifications([]);
+    }
   };
 
   const completeTask = async (taskId: string) => {
@@ -203,28 +167,50 @@ export default function StudentDashboard() {
     if (!task) return;
 
     try {
+      // Mark task as completed in database
+      const { error: taskError } = await supabase
+        .from('tasks')
+        .update({ completed: true })
+        .eq('id', taskId);
+
+      if (taskError) throw taskError;
+
       // Award tokens
       setTokenBalance(prev => ({
         ...prev,
-        [task.tokenType]: prev[task.tokenType] + task.tokenReward
+        [task.tokenType]: prev[task.tokenType] + task.tokens
       }));
 
-      // Add notification
+      // Create notification in database
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: user?.id,
+          message: `You earned ${task.tokens} ${task.tokenType} tokens for completing "${task.title}"!`,
+          type: 'success',
+          read: false
+        });
+
+      if (notifError) {
+        console.error('Error creating notification:', notifError);
+      }
+
+      // Update local state
+      setTasks(prev => prev.map(t => 
+        t.id === taskId ? { ...t, completed: true } : t
+      ));
+
+      // Add notification to local state
       const newNotification: Notification = {
         id: Date.now().toString(),
-        message: `You earned ${task.tokenReward} ${task.tokenType} tokens for completing "${task.title}"!`,
+        message: `You earned ${task.tokens} ${task.tokenType} tokens for completing "${task.title}"!`,
         type: 'success',
         read: false,
         timestamp: new Date().toISOString()
       };
       setNotifications(prev => [newNotification, ...prev]);
 
-      // Mark task as completed
-      setTasks(prev => prev.map(t => 
-        t.id === taskId ? { ...t, completed: true } : t
-      ));
-
-      // Save to database
+      // Save token balance to database
       await saveTokenBalance();
     } catch (error) {
       console.error('Error completing task:', error);
@@ -244,10 +230,12 @@ export default function StudentDashboard() {
   };
 
   const handleQRScan = (qrData: string) => {
-    // Find the event that matches the QR code
-    const event = events.find(e => e.qrCode === qrData);
+    // Find the event that matches the QR code (assuming QR code contains event ID)
+    const event = events.find(e => e.id === qrData);
     if (event) {
       earnTokens(event);
+    } else {
+      alert('Invalid QR code or event not found');
     }
     setScanning(false);
     setScannedEvent(null);
@@ -400,6 +388,15 @@ export default function StudentDashboard() {
                   )}
                 </button>
               </div>
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  window.location.href = '/auth/sign-in';
+                }}
+                className="ml-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Sign Out
+              </button>
             </div>
           </div>
         </div>
@@ -448,7 +445,7 @@ export default function StudentDashboard() {
                               ? 'bg-blue-100 text-blue-800' 
                               : 'bg-green-100 text-green-800'
                           }`}>
-                            {task.tokenReward} {task.tokenType} tokens
+                            {task.tokens} {task.tokenType} tokens
                           </span>
                         </div>
                       </div>
